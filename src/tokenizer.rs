@@ -5,6 +5,7 @@ pub enum TokenType {
     TABLE,
     DATABASE,
     USE,
+    LIST,
     IDENTIFIER,
     LBRACE,
     RBRACE,
@@ -46,6 +47,7 @@ impl Tokenizer {
                     "TABLE" => tokens.push(Token { token: TokenType::TABLE, value: None }),
                     "DATABASE" => tokens.push(Token { token: TokenType::DATABASE, value: None }),
                     "USE" => tokens.push(Token { token: TokenType::USE, value: None }),
+                    "LIST" => tokens.push(Token { token: TokenType::LIST, value: None }),
                     _ => tokens.push(Token { token: TokenType::IDENTIFIER, value: Some(buffer.clone()) }),
                 }
                 buffer.clear();

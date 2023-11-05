@@ -55,13 +55,69 @@ impl Generator {
                         return Err("No database selected. Use 'USE DATABASE' statement before creating tables.".into());
                     }
                 },
-
+                NodeStmt::ListDatabase(_stmt) => {
+                    self.list_databases()?;
+                },
+                NodeStmt::ListTable(_stmt) => {
+                    if let Some(_) = self.global_db_file {
+                        self.list_tables()?;
+                    } else {
+                        return Err("No database selected. Use 'USE DATABASE' statement before listing tables.".into());
+                    }
+                }
             }
         }
 
         Ok(())
     }
 
+    fn list_databases(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let databases: Vec<_> = fs::read_dir("./")?
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                if entry.path().extension()? == "json" {
+                    entry.path().file_stem().and_then(|name| name.to_str()).map(String::from)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let max_width = databases.iter().map(|name| name.len()).max().unwrap_or(10);
+        let box_width = max_width + 4; // Padding on sides
+
+        println!("{}", "+".to_string() + &"-".repeat(box_width) + "+");
+
+        println!("|{:^width$}|", "DATABASES", width = box_width);
+
+        for db in databases {
+            println!("|  {:<width$}  |", db, width = max_width);
+        }
+
+        println!("{}", "+".to_string() + &"-".repeat(box_width) + "+");
+
+        Ok(())
+    }
+
+    fn list_tables(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let db_content = self.read_database()?;
+
+        let tables: Vec<String> = db_content.keys().cloned().collect();
+
+        let max_width = tables.iter().map(|name| name.len()).max().unwrap_or(10);
+        let box_width = max_width + 4; // Padding on sides
+
+        println!("{}", "+".to_string() + &"-".repeat(box_width) + "+");
+        println!("|{:^width$}|", "TABLES", width = box_width);
+
+        for table in tables {
+            println!("|  {:<width$}  |", table, width = max_width);
+        }
+
+        println!("{}", "+".to_string() + &"-".repeat(box_width) + "+");
+
+        Ok(())
+    }
 
 
     fn read_database(&mut self) -> Result<Map<String, Value>, Box<dyn std::error::Error>> {

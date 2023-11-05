@@ -23,6 +23,17 @@ pub struct  NodeStmtUse{
     pub db_name: NodeExpr,
 }
 
+
+#[derive(Debug)]
+pub struct NodeStmtListDatabase {
+    
+}
+
+#[derive(Debug)]
+pub struct NodeStmtListTable {
+    
+}
+
 #[derive(Debug)]
 pub enum NodeExpr{
     Identifier(NodeExprIdentifier)
@@ -33,6 +44,8 @@ pub enum NodeStmt{
     CreateTable(NodeStmtCreateTable),
     CreateDatabase(NodeStmtCreateDatabase),
     UseDatabaase(NodeStmtUse),
+    ListDatabase(NodeStmtListDatabase),
+    ListTable(NodeStmtListTable),
 }
 
 pub struct NodeProg{
@@ -172,6 +185,17 @@ impl Parser {
                         if let Some(use_database) = self.parse_use_database() {
                             return  Some(NodeStmt::UseDatabaase(use_database));
                         }
+                    }
+                },
+                tokenizer::TokenType::LIST => {
+                    if self.peek(1).map(|t| t.token) == Some(tokenizer::TokenType::DATABASE) {
+                        self.consume(); 
+                        self.consume(); 
+                        return Some(NodeStmt::ListDatabase(NodeStmtListDatabase {}));
+                    }else if self.peek(1).map(|t| t.token) == Some(tokenizer::TokenType::TABLE) {
+                        self.consume(); 
+                        self.consume(); 
+                        return Some(NodeStmt::ListTable(NodeStmtListTable {}));
                     }
                 }
                 _ => {}
