@@ -4,6 +4,7 @@ mod parser;
 mod generator;
 
 fn main() {
+    let mut generator = generator::Generator::new();
     loop {
         print!("mlinql> ");
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
@@ -26,9 +27,8 @@ fn main() {
         let mut parser = parser::Parser::new(tokens);
         match parser.parse_prog() {
             Some(prog) => {
-                let generator = generator::Generator::new("db.json".to_string());
                 match generator.generate(prog) {
-                    Ok(_) => println!("Database generated successfully."),
+                    Ok(_) => println!("Command executed."),
                     Err(e) => eprintln!("Failed to generate database: {}", e),
                 }
             },

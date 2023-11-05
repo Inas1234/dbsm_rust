@@ -14,14 +14,25 @@ pub struct NodeStmtCreateTable{
 } 
 
 #[derive(Debug)]
+pub struct NodeStmtCreateDatabase{
+    pub database_name: NodeExpr,
+}
+
+#[derive(Debug)]
+pub struct  NodeStmtUse{
+    pub db_name: NodeExpr,
+}
+
+#[derive(Debug)]
 pub enum NodeExpr{
     Identifier(NodeExprIdentifier)
 }
 
 #[derive(Debug)]
 pub enum NodeStmt{
-    CreateTable(NodeStmtCreateTable)
-    
+    CreateTable(NodeStmtCreateTable),
+    CreateDatabase(NodeStmtCreateDatabase),
+    UseDatabaase(NodeStmtUse),
 }
 
 pub struct NodeProg{
@@ -101,6 +112,36 @@ impl Parser {
         })
     }
 
+    pub fn parse_create_database(&mut self) -> Option<NodeStmtCreateDatabase> {
+        self.consume();
+
+        if self.consume().map(|t| t.token) != Some(tokenizer::TokenType::DATABASE) {
+            return None;
+        }
+
+
+        let db_name = if let Some(ident) = self.parse_expression() {
+            ident
+        } else {
+            return None;
+        };
+
+        Some(NodeStmtCreateDatabase { database_name: db_name })
+    }
+
+
+    pub fn parse_use_database(&mut self) -> Option<NodeStmtUse> {
+        self.consume();
+        let db_name = if let Some(ident) = self.parse_expression() {
+            ident
+        } else {
+            return None;
+        };
+
+        Some(NodeStmtUse { db_name: db_name })
+
+    }
+
     pub fn parse_expression(&mut self) -> Option<NodeExpr> {
 
         if let Some(identifier) = self.parse_identifier() {
@@ -120,7 +161,19 @@ impl Parser {
                             return Some(NodeStmt::CreateTable(create_table_stmt));
                         }
                     }
+                    else if self.peek(1).map(|t| t.token) == Some(tokenizer::TokenType::DATABASE){
+                        if let Some(create_db_stmt) = self.parse_create_database() {
+                            return Some(NodeStmt::CreateDatabase(create_db_stmt));
+                        }
+                    }
                 },
+                tokenizer::TokenType::USE => {
+                    if self.peek(1).map(|t| t.token) == Some(tokenizer::TokenType::IDENTIFIER) {
+                        if let Some(use_database) = self.parse_use_database() {
+                            return  Some(NodeStmt::UseDatabaase(use_database));
+                        }
+                    }
+                }
                 _ => {}
             }
         }

@@ -3,6 +3,8 @@
 pub enum TokenType {
     CREATE,
     TABLE,
+    DATABASE,
+    USE,
     IDENTIFIER,
     LBRACE,
     RBRACE,
@@ -42,6 +44,8 @@ impl Tokenizer {
                 match buffer.as_str() {
                     "CREATE" => tokens.push(Token { token: TokenType::CREATE, value: None }),
                     "TABLE" => tokens.push(Token { token: TokenType::TABLE, value: None }),
+                    "DATABASE" => tokens.push(Token { token: TokenType::DATABASE, value: None }),
+                    "USE" => tokens.push(Token { token: TokenType::USE, value: None }),
                     _ => tokens.push(Token { token: TokenType::IDENTIFIER, value: Some(buffer.clone()) }),
                 }
                 buffer.clear();
