@@ -1,7 +1,12 @@
+
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum TokenType {
     CREATE,
     TABLE,
     IDENTIFIER,
+    LBRACE,
+    RBRACE,
+    COMMA
 }
 
 pub struct Token {
@@ -40,7 +45,23 @@ impl Tokenizer {
                     _ => tokens.push(Token { token: TokenType::IDENTIFIER, value: Some(buffer.clone()) }),
                 }
                 buffer.clear();
-            } else {
+            }
+            else if c == ','{
+                self.consume();
+                tokens.push(Token { token: TokenType::COMMA, value: None });
+                continue;
+            } 
+            else if c == '{'{
+                self.consume();
+                tokens.push(Token { token: TokenType::LBRACE, value: None });
+                continue;
+            }
+            else if c == '}'{
+                self.consume();
+                tokens.push(Token { token: TokenType::RBRACE, value: None });
+                continue;
+            }
+            else {
                 self.consume(); 
             }
         }
