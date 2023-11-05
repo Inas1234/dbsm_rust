@@ -2,22 +2,39 @@
 use crate::tokenizer::{self, Token};
 
 
+#[derive(Debug)]
 pub struct NodeExprIdentifier{
     pub name: String,
 }
 
+#[derive(Debug)]
 pub struct NodeStmtCreateTable{
-    pub table_name: NodeExprIdentifier,
-    pub columns: Vec<NodeExprIdentifier>,
+    pub table_name: NodeExpr,
+    pub columns: Vec<NodeExpr>,
 } 
 
+#[derive(Debug)]
 pub enum NodeExpr{
     Identifier(NodeExprIdentifier)
 }
 
+#[derive(Debug)]
 pub enum NodeStmt{
     CreateTable(NodeStmtCreateTable)
     
+}
+
+pub struct NodeProg{
+   pub nodes: Vec<NodeStmt>
+}
+
+impl NodeProg {
+    pub fn new() -> Self {
+        NodeProg { nodes: Vec::new() }
+    }
+    pub fn add_node(&mut self, node: NodeStmt) {
+        self.nodes.push(node);
+    }
 }
 
 pub struct Parser {
@@ -36,6 +53,7 @@ impl Parser {
             match token.token {
                 tokenizer::TokenType::IDENTIFIER => {
                     if let Some(name) = &token.value {
+                        println!("name: {}", name);
                         return  Some(NodeExprIdentifier { name: name.clone() });
                     }
                 }
@@ -54,7 +72,7 @@ impl Parser {
         }
 
 
-        let table_name = if let Some(ident) = self.parse_identifier() {
+        let table_name = if let Some(ident) = self.parse_expression() {
             ident
         } else {
             return None;
@@ -64,7 +82,7 @@ impl Parser {
             return None;
         }
 
-        while let Some(column) = self.parse_identifier() {
+        while let Some(column) = self.parse_expression() {
             columns.push(column);
             if self.peek(0).map(|t| t.token) == Some(tokenizer::TokenType::COMMA) {
                 self.consume();
@@ -83,6 +101,15 @@ impl Parser {
         })
     }
 
+    pub fn parse_expression(&mut self) -> Option<NodeExpr> {
+
+        if let Some(identifier) = self.parse_identifier() {
+            return Some(NodeExpr::Identifier(identifier));
+        }
+
+        
+        None
+    }
 
     pub fn parse_stmt(&mut self) -> Option<NodeStmt> {
         if let Some(token) = self.peek(0) {
@@ -98,6 +125,26 @@ impl Parser {
             }
         }
         None
+    }
+
+
+    pub fn parse_prog(&mut self) -> Option<NodeProg>{
+        let mut prog = NodeProg::new();
+        while self.index < self.tokens.len() {
+            if let Some(stmt) = self.parse_stmt(){
+                prog.add_node(stmt);
+            }else {
+                println!("ERRROR: there has been and error parsing the stmt");
+                return None;
+            }
+        }
+
+        if prog.nodes.is_empty(){
+            println!("ERRROR: there has been and error parsing the prog, shits emoty");
+            None
+        }else{
+            Some(prog)
+        }
     }
 
 

@@ -1,11 +1,11 @@
-use crate::parser::NodeStmt;
 
 mod tokenizer;
 mod parser;
+mod generator;
 
 fn main() {
     loop {
-        print!("> ");
+        print!("mlinql> ");
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
 
         let mut input = String::new();
@@ -24,21 +24,15 @@ fn main() {
         let mut tokenizer = tokenizer::Tokenizer::new(input);
         let tokens: Vec<tokenizer::Token> = tokenizer.tokenize();
         let mut parser = parser::Parser::new(tokens);
-
-        match parser.parse_stmt() {
-            Some(stmt) => match stmt {
-                NodeStmt::CreateTable(create_table_stmt) => {
-                    // Verify the parsed table name and columns
-                    println!("{}", create_table_stmt.table_name.name);
-                    for expr in create_table_stmt.columns {
-                        println!("{}", expr.name);
-                    }
+        match parser.parse_prog() {
+            Some(prog) => {
+                let generator = generator::Generator::new("db.json".to_string());
+                match generator.generate(prog) {
+                    Ok(_) => println!("Database generated successfully."),
+                    Err(e) => eprintln!("Failed to generate database: {}", e),
                 }
-                // Add other cases for different statements
-                _ => println!("Parsed a different kind of statement."),
             },
-            None => println!("Failed to parse the statement."),
+            None => eprintln!("Failed to parse program."),
         }
-
     }
 }
